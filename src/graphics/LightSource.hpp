@@ -13,10 +13,13 @@ namespace assignment::graphics
         glm::vec3 position;
         glm::vec4 color;
 
+        bool attachedToCamera;
+
     public:
-        explicit LightSource(const glm::vec3& position, const glm::vec4& color);
+        explicit LightSource(const glm::vec3& position, const glm::vec4& color, bool attachedToCamera = false);
 
         [[nodiscard]] glm::vec3 getPosition() const { return position; }
         [[nodiscard]] glm::vec4 getColor() const { return color; }
+        [[nodiscard]] bool isAttachedToCamera() const { return attachedToCamera; }
     };
 }

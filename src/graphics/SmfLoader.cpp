@@ -23,6 +23,7 @@ namespace assignment::graphics
     {
         const auto contents = files::FileUtilities::getFileContents(filename);
         auto vertexData = VertexData{};
+
         std::istringstream input(contents);
         std::string line;
         std::size_t lineNumber = 0;

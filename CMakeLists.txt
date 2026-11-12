@@ -59,6 +59,26 @@ add_executable(${PROJECT_NAME}
         src/graphics/SmfLoader.cpp
         src/graphics/LightSource.hpp
         src/graphics/LightSource.cpp
+        src/graphics/BezierPatch.hpp
+        src/graphics/BezierPatch.cpp
+        src/graphics/MultisampleFramebuffer.hpp
+        src/graphics/MultisampleFramebuffer.cpp
+        src/graphics/opengl/object/Framebuffer.hpp
+        src/graphics/opengl/object/Renderbuffer.hpp
+        src/graphics/opengl/object/Texture.hpp
+        src/graphics/TextureLoader.hpp
+        src/graphics/TextureLoader.cpp
 )
 
-target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} glfw glm::glm)
+target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+        OpenGL::GL
+        glfw
+        glm::glm
+)
+
+target_include_directories(${PROJECT_NAME}
+        PRIVATE
+        "deps/glad/include"
+        "deps/stb"
+)

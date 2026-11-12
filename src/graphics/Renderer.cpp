@@ -10,7 +10,7 @@
 
 namespace assignment::graphics
 {
-    void Renderer::addMesh(const Mesh &mesh) {
+    void Renderer::addMesh(const std::shared_ptr<Mesh> &mesh) {
         this->meshes.push_back(mesh);
     }
 
@@ -19,41 +19,52 @@ namespace assignment::graphics
         this->lights.push_back(lightSource);
     }
 
+    glm::vec3 Renderer::resolveLightPosition(const LightSource &light) const
+    {
+        if (!light.isAttachedToCamera())
+            return light.getPosition();
+
+        const glm::vec3 forward = glm::normalize(camera.getOrientation());
+        const glm::vec3 right = glm::normalize(glm::cross(forward, camera.getUp()));
+        const glm::vec3 up = glm::cross(right, forward);
+        const glm::vec3 offset = light.getPosition();
+
+        return camera.getPosition() + offset.x * right + offset.y * up + offset.z * forward;
+    }
+
     void Renderer::render() const
     {
         auto [view, projection] = camera.getMatrix();
 
-        for (const Mesh& mesh : this->meshes)
+        std::vector<glm::vec3> lightPositions;
+        std::vector<glm::vec4> lightColors;
+        lightPositions.reserve(this->lights.size());
+        lightColors.reserve(this->lights.size());
+
+        for (const auto& light : this->lights) {
+            lightPositions.push_back(resolveLightPosition(light));
+            lightColors.push_back(light.getColor());
+        }
+
+        const int numActiveLights = static_cast<int>(this->lights.size());
+
+        for (const auto& mesh : this->meshes)
         {
-            const GLuint shaderId = mesh.getShaderProgram().getId();
+            const GLuint shaderId = mesh->getShaderProgram().getId();
 
             glUseProgram(shaderId);
-            glBindVertexArray(mesh.getVertexArray().getId());
 
             const glm::mat4 model = glm::translate(
                 glm::mat4(1.0f),
-                mesh.getPosition()
+                mesh->getPosition()
             );
 
-            const GLint modelLoc = glGetUniformLocation(shaderId, "model");
-            glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
-            const GLint viewLoc = glGetUniformLocation(shaderId, "view");
-            glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-            const GLint projLoc = glGetUniformLocation(shaderId, "proj");
-            glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+            glUniformMatrix4fv(glGetUniformLocation(shaderId, "model"), 1, GL_FALSE, glm::value_ptr(model));
+            glUniformMatrix4fv(glGetUniformLocation(shaderId, "view"), 1, GL_FALSE, glm::value_ptr(view));
+            glUniformMatrix4fv(glGetUniformLocation(shaderId, "proj"), 1, GL_FALSE, glm::value_ptr(projection));
+            glUniform3fv(glGetUniformLocation(shaderId, "viewPosition"), 1, glm::value_ptr(camera.getPosition()));
 
-            const int numActiveLights = static_cast<int>(this->lights.size());
             glUniform1i(glGetUniformLocation(shaderId, "numLights"), numActiveLights);
-
-            std::vector<glm::vec3> lightPositions;
-            std::vector<glm::vec4> lightColors;
-            lightPositions.reserve(this->lights.size());
-            lightColors.reserve(this->lights.size());
-
-            for (const auto& light : this->lights) {
-                lightPositions.push_back(light.getPosition());
-                lightColors.push_back(light.getColor());
-            }
 
             if (numActiveLights > 0) {
                 glUniform3fv(
@@ -69,16 +80,7 @@ namespace assignment::graphics
                 );
             }
 
-            if (!mesh.getVertexData().elements.empty()) {
-                glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.getElementBuffer().getId());
-                glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(mesh.getVertexData().elements.size()), GL_UNSIGNED_INT, nullptr);
-            } else {
-                glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(mesh.getVertexData().vertices.size() / 3));
-            }
-
-            glBindVertexArray(0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+            mesh->draw({.model = model, .view = view, .projection = projection});
         }
     }
 }

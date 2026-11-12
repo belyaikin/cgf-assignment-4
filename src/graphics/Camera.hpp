@@ -36,6 +36,10 @@ namespace assignment::graphics {
         [[nodiscard]] const glm::vec2& getViewportSize() const { return viewportSize; }
         void setViewportSize(const glm::vec2& value) { viewportSize = value; }
 
+        [[nodiscard]] const glm::vec3& getPosition() const { return position; }
+        [[nodiscard]] const glm::vec3& getOrientation() const { return orientation; }
+        [[nodiscard]] const glm::vec3& getUp() const { return up; }
+
         [[nodiscard]] CameraMatrix getMatrix() const;
 
         void move(GLFWwindow* window);

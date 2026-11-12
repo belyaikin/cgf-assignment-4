@@ -6,5 +6,6 @@
 
 namespace assignment::graphics
 {
-    LightSource::LightSource(const glm::vec3& position, const glm::vec4& color) : position(position), color(color) {}
+    LightSource::LightSource(const glm::vec3& position, const glm::vec4& color, const bool attachedToCamera)
+        : position(position), color(color), attachedToCamera(attachedToCamera) {}
 }
